@@ -8,7 +8,7 @@ module.exports = {
   deploy: {
     production: {
       user: 'root', // 通过root权限进入服务器
-      host: '0.0.0.0', // 服务器ip地址
+      host: '127.0.0.1', // 服务器ip地址
       ref: 'origin/master', // 要拉取代码的分支
       repo: 'git@gitee.com:nnnannn/vuecil_weather.git', // 代码仓库地址，我存放的是 Github
       path: '/workspace/weather', // 拉取代码后，存放在服务器的文件地址。
