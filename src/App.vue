@@ -214,6 +214,7 @@ export default {
     const deleteMenu = (val) => {
       if (router.currentRoute.value.fullPath === state.menuList[val]) {
         router.push('/')
+        state.toggle = !state.ismobile
         state.defaultActive = '/'
       }
       state.menuList.splice(val, 1)
