@@ -264,13 +264,9 @@ export default {
         tooltip: {
           trigger: 'axis',
         },
-        toolbox: {
-          feature: {
-            saveAsImage: {}
-          }
-        },
         legend: {
-          data: ['白天气温', '夜间气温']
+          data: ['白天气温', '夜间气温'],
+          right: 0
         },
         series: [{
           name: '白天气温',

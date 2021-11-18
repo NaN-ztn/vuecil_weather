@@ -238,7 +238,7 @@ export default {
   width: 100% !important;
   height: 100%;
   z-index: 100;
-  top: 50px;
+  top: 45px;
   position: absolute;
   background-color: #888;
   .body {
