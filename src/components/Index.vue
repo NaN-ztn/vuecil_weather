@@ -1,74 +1,76 @@
 <template>
   <el-card class="introduce">
     <div class="order">
-      <el-card v-loading="loading" class="order-item cityInfo">
-        <template #header>
-          <svg class="icon size" aria-hidden="true">
-            <use v-bind:xlink:href="tianqi"></use>
-          </svg>
-          <div class="card-header">
-            <span>{{ mapData.city }}</span
-            ><br />
-            <span class="info">(实时)</span>
+      <div class="total">
+        <el-card v-loading="loading" class="order-item cityInfo">
+          <template #header>
+            <svg class="icon size" aria-hidden="true">
+              <use v-bind:xlink:href="tianqi"></use>
+            </svg>
+            <div class="card-header">
+              <span>{{ mapData.city }}</span
+              ><br />
+              <span class="info">(实时)</span>
+            </div>
+          </template>
+          <div class="weather">
+            {{ mapData.weather }}
           </div>
-        </template>
-        <div class="weather">
-          {{ mapData.weather }}
-        </div>
-        <div class="temperature">
-          {{ mapData.temperature }}<i class="iconfont icon-sheshidu"></i>
-        </div>
-        <div class="wind">
-          风力：{{ mapData.windPower }}
-          <el-divider direction="vertical"></el-divider>
-          风向：{{ mapData.windDirection }}
-          <el-divider direction="vertical"></el-divider>
-          空气湿度：{{ mapData.humidity }}%
-        </div>
-      </el-card>
-      <el-card class="order-item" v-loading="loading">
-        <el-table :data="featureMapData" stripe style="width: 100%">
-          <el-table-column prop="date" label="日期" />
-          <el-table-column label="白天">
-            <el-table-column label="温度" width="75">
-              <template #default="scope">
-                <span>{{ scope.row.dayTemp }}</span
-                >℃
-              </template>
+          <div class="temperature">
+            {{ mapData.temperature }}<i class="iconfont icon-sheshidu"></i>
+          </div>
+          <div class="wind">
+            风力：{{ mapData.windPower }}
+            <el-divider direction="vertical"></el-divider>
+            风向：{{ mapData.windDirection }}
+            <el-divider direction="vertical"></el-divider>
+            空气湿度：{{ mapData.humidity }}%
+          </div>
+        </el-card>
+        <el-card class="order-item" v-loading="loading">
+          <el-table :data="featureMapData" stripe style="width: 100%">
+            <el-table-column fixed prop="date" label="日期" width="100" />
+            <el-table-column label="白天">
+              <el-table-column label="温度" width="75">
+                <template #default="scope">
+                  <span>{{ scope.row.dayTemp }}</span
+                  >℃
+                </template>
+              </el-table-column>
+              <el-table-column prop="name" label="天气">
+                <template #default="scope">
+                  <span>{{ scope.row.dayWeather }}</span>
+                </template>
+              </el-table-column>
+              <el-table-column prop="name" label="风向/风力" width="85">
+                <template #default="scope">
+                  <span>{{ scope.row.dayWindDir }}</span>
+                  <span>{{ scope.row.dayWindPower }}</span>
+                </template>
+              </el-table-column>
             </el-table-column>
-            <el-table-column prop="name" label="天气" width="70">
-              <template #default="scope">
-                <span>{{ scope.row.dayWeather }}</span>
-              </template>
+            <el-table-column label="夜间">
+              <el-table-column label="温度" width="75">
+                <template #default="scope">
+                  <span>{{ scope.row.nightTemp }}</span
+                  >℃
+                </template>
+              </el-table-column>
+              <el-table-column prop="name" label="天气" width="70">
+                <template #default="scope">
+                  <span>{{ scope.row.nightWeather }}</span>
+                </template>
+              </el-table-column>
+              <el-table-column prop="name" label="风向/风力" width="85">
+                <template #default="scope">
+                  <span>{{ scope.row.nightWindDir }}</span>
+                  <span>{{ scope.row.nightWindPower }}</span>
+                </template>
+              </el-table-column>
             </el-table-column>
-            <el-table-column prop="name" label="风向/风力" width="85">
-              <template #default="scope">
-                <span>{{ scope.row.dayWindDir }}</span>
-                <span>{{ scope.row.dayWindPower }}</span>
-              </template>
-            </el-table-column>
-          </el-table-column>
-          <el-table-column label="夜间">
-            <el-table-column label="温度" width="75">
-              <template #default="scope">
-                <span>{{ scope.row.nightTemp }}</span
-                >℃
-              </template>
-            </el-table-column>
-            <el-table-column prop="name" label="天气" width="70">
-              <template #default="scope">
-                <span>{{ scope.row.nightWeather }}</span>
-              </template>
-            </el-table-column>
-            <el-table-column prop="name" label="风向/风力" width="85">
-              <template #default="scope">
-                <span>{{ scope.row.nightWindDir }}</span>
-                <span>{{ scope.row.nightWindPower }}</span>
-              </template>
-            </el-table-column>
-          </el-table-column>
-        </el-table>
-      </el-card>
+          </el-table>
+        </el-card>
+      </div>
     </div>
     <div id="echartcontaier"></div>
   </el-card>
@@ -282,6 +284,7 @@ export default {
         }]
       };
       myChart.setOption(option, true);
+      window.addEventListener("resize", () => { myChart.resize(); });
     }
     return {
       ...toRefs(state),
@@ -290,14 +293,21 @@ export default {
   }
 }
 </script>
-<style scoped>
+<style scoped lang="less">
+.total {
+  display: flex;
+  flex-wrap: wrap; /*换行*/
+  justify-content: space-between; /*水平二个元素间加空白*/
+  width: 90%;
+  margin: 5px auto;
+}
 .size {
   width: 3em;
   height: 3em;
   position: absolute;
 }
 .introduce {
-  min-width: 1227px;
+  width: 100vm;
 }
 .introduce .order {
   display: flex;
@@ -306,6 +316,7 @@ export default {
 .introduce .order .order-item {
   flex: 1;
   margin-right: 20px;
+  height: 350px;
 }
 .introduce .order .order-item:last-child {
   margin-right: 0;
@@ -344,5 +355,24 @@ export default {
 }
 .cityInfo {
   position: relative;
+}
+@media only screen and (max-width: 768px) {
+  .introduce {
+    margin-top: 40px;
+  }
+  .introduce .order .order-item {
+    flex: none;
+    width: 100%;
+  }
+  .order-item:nth-child(1) {
+    margin-bottom: 20px;
+    height: 360px !important;
+  }
+  .total {
+    width: 100%;
+  }
+  .card-header {
+    font-size: 5vw;
+  }
 }
 </style>

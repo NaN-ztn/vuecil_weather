@@ -1,7 +1,55 @@
 <template>
   <div class="layout">
+    <div
+      class="smallHead animated fadeInLeft"
+      :class="{ active: headerScroll, defcolor: toggle }"
+    >
+      <ul class="menu-icon" @click="toggle = !toggle">
+        <li :class="{ lione: toggle }"></li>
+        <li :class="{ litwo: toggle }"></li>
+        <li :class="{ lithree: toggle }"></li>
+      </ul>
+      <svg class="icon logo" aria-hidden="true">
+        <use xlink:href="#icon-tianqi"></use>
+      </svg>
+      <div class="title">天气查询</div>
+    </div>
+    <el-aside
+      class="smallaside animated fadeInLeft"
+      v-show="ismobile && toggle"
+    >
+      <div class="body">
+        <el-divider @click="addmenuList">
+          <i class="iconfont icon-tianjia"></i>
+        </el-divider>
+        <el-menu
+          background-color="#888"
+          text-color="#fff"
+          :router="true"
+          :default-active="defaultActive"
+        >
+          <el-menu-item index="/" @click="handleClick">
+            <i class="iconfont icon-dingwei"></i>所在地天气
+          </el-menu-item>
+          <el-menu-item
+            v-for="(city, index) in menuList"
+            :key="city"
+            :index="city"
+            @click="handleClick"
+          >
+            <div class="menuInfo">
+              {{ city.slice(7) }}
+              <i
+                class="iconfont icon-shanchu1"
+                @click.stop="deleteMenu(index)"
+              ></i>
+            </div>
+          </el-menu-item>
+        </el-menu>
+      </div>
+    </el-aside>
     <el-container class="container">
-      <el-aside class="aside test-1">
+      <el-aside class="aside test-1" v-show="!ismobile">
         <div class="body">
           <div class="head">
             <svg class="icon logo" aria-hidden="true">
@@ -37,7 +85,7 @@
           </el-menu>
         </div>
       </el-aside>
-      <el-main>
+      <el-main id="main">
         <transition mode="out-in" enter-active-class="fadeInLeft">
           <router-view class="animated" v-slot="{ Component, route }">
             <component :is="Component" :key="route.fullPath" />
@@ -48,21 +96,19 @@
     <el-dialog
       v-model="visible"
       title="添加城市"
-      width="600px"
+      width="80%"
       @close="handleClose"
       center
     >
-      <el-form :model="ruleForm" label-width="100px" class="good-form">
-        <el-form-item label="地区">
-          <el-cascader
-            ref="cascader"
-            :placeholder="defaultCate"
-            style="width: 300px"
-            :options="options"
-            @change="handleChange"
-          ></el-cascader>
-        </el-form-item>
-      </el-form>
+      <div class="diqu">地区:</div>
+      <el-cascader
+        ref="cascader"
+        :placeholder="defaultCate"
+        style="width: 100%"
+        :options="options"
+        @change="handleChange"
+      ></el-cascader>
+
       <template #footer>
         <span class="dialog-footer">
           <el-button @click="visible = false">取 消</el-button>
@@ -74,7 +120,7 @@
 </template>
 
 <script>
-import { onMounted, reactive, toRefs, nextTick, ref, getCurrentInstance } from 'vue'
+import { onMounted, reactive, toRefs, nextTick, ref, getCurrentInstance, onUnmounted } from 'vue'
 import { provinceAndCityData, CodeToText } from 'element-china-area-data'
 // import { ElMessage } from 'element-plus'
 import { useRouter } from 'vue-router'
@@ -92,8 +138,13 @@ export default {
       options: provinceAndCityData,
       cityName: '',
       defaultActive: '/',
-
+      headerScroll: false,
+      toggle: false,
+      ismobile: document.body.clientWidth <= 768,
     })
+    const handleClick = () => {
+      state.toggle = !state.ismobile
+    }
     const handleClose = () => {
       cascader.value.panel.clearCheckedNodes()
     }
@@ -108,6 +159,14 @@ export default {
         state.cityName = '/?city=' + ((CodeToText[val[1]] === '市辖区' || CodeToText[val[1]] === '县' || CodeToText[val[1]] === '自治区直辖县级行政区划' || CodeToText[val[1]] === '省直辖县级行政区划') ? CodeToText[val[0]] : CodeToText[val[1]])
     }
     const submitForm = async () => {
+      if (state.cityName == '') {
+        internalInstance.appContext.app.config.globalProperties.$message({
+          type: 'error',
+          message: "请选择一个地区",
+          duration: 1000
+        })
+        return
+      }
       if (taiwan.includes(state.cityName.slice(7))) {
         // console.log(getCurrentInstance())
         internalInstance.appContext.app.config.globalProperties.$message({
@@ -122,11 +181,20 @@ export default {
       state.visible = false
       await nextTick()
       state.defaultActive = state.cityName
+      state.toggle = !state.ismobile
       router.push(state.cityName)
       sessionStorage.setItem('menuList', JSON.stringify(state.menuList))
     }
+    nextTick(() => {
+      document.getElementById('main').addEventListener('scroll', () => {
+        let scrollTop = document.getElementById('main').scrollTop
+        scrollTop > 50 ? state.headerScroll = true : state.headerScroll = false
+      })
+    })
     onMounted(() => {
+      // console.log(document.getElementById('main').scrollTop)
       // console.log(getCurrentInstance());
+      window.addEventListener('resize', handleResize)
       if (sessionStorage.getItem('menuList') === null)
         state.menuList = []
       else
@@ -135,6 +203,14 @@ export default {
       state.defaultActive = '/'
       router.push('/')
     })
+    onUnmounted(() => {
+      window.removeEventListener('resize', handleResize)
+    })
+    const handleResize = () => {
+      // console.log(document.body.clientWidth)
+      state.ismobile = document.body.clientWidth <= 768
+      // console.log(state.ismobile)
+    }
     const deleteMenu = (val) => {
       if (router.currentRoute.value.fullPath === state.menuList[val]) {
         router.push('/')
@@ -150,19 +226,46 @@ export default {
       handleChange,
       submitForm,
       deleteMenu,
-      cascader
+      cascader,
+      handleClick
     }
   }
 }
 </script>
 
-<style scoped>
+<style lang="less" scoped>
+.smallaside {
+  width: 100% !important;
+  height: 100%;
+  z-index: 100;
+  top: 50px;
+  position: absolute;
+  background-color: #888;
+  .body {
+    width: 100% !important;
+    .el-divider {
+      margin-top: 30px;
+    }
+  }
+}
+.smallHead {
+  background: #fffcf5;
+  height: 50px;
+  width: 100%;
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  transition: all 500ms;
+  &.active {
+    background: #888;
+  }
+}
 .body {
   width: 200px !important;
 }
 .layout {
-  min-height: 100vh;
   background-color: #fffcf5;
+  position: relative;
 }
 .container {
   height: 100vh;
@@ -217,6 +320,61 @@ export default {
 }
 .el-menu-item i {
   margin-right: 10px;
+}
+.defcolor {
+  background-color: #888;
+}
+@media only screen and (max-width: 768px) {
+  .el-menu-item {
+    font-size: 4vw;
+  }
+  .smallHead {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    .title {
+      font-size: 5vw;
+      text-align: center;
+      line-height: 50px;
+    }
+    .logo {
+      margin-right: 10px;
+    }
+  }
+  .menu-icon {
+    width: 18px;
+    height: 50px;
+    position: absolute;
+    left: 5px;
+    li {
+      list-style: none;
+      width: 18px;
+      height: 1px;
+      background-color: #000000;
+      position: absolute;
+      transition: all 500ms;
+      transform-origin: left center;
+    }
+    li:nth-child(1) {
+      top: 18px;
+    }
+    li:nth-child(2) {
+      top: 24px;
+    }
+    li:nth-child(3) {
+      top: 30px;
+    }
+    .lione {
+      transform: rotateZ(40deg);
+    }
+    .litwo {
+      opacity: 0;
+    }
+    .lithree {
+      transform: rotateZ(-40deg);
+    }
+  }
 }
 </style>
 
